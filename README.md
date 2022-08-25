@@ -67,11 +67,12 @@ PermitRootLogin no
 antonio@antonio:~$ sudo systemctl reload ssh
 ```
 
-9. Configuramos las reglas para iptables para el puerto, el puerto 80 y el puerto 443
+9. Configuramos las reglas para iptables para el puerto, el puerto 80 y el puerto 443 y el 5432
 
    ```bash
    antonio@antonio:~$ sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
    antonio@antonio:~$ sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+   antonio@antonio:~$ sudo iptables -A INPUT -p tcp --dport 5432 -j ACCEPT
    antonio@antonio:~$ sudo iptables -L
    Chain INPUT (policy ACCEPT)
    target     prot opt source               destination
@@ -90,6 +91,14 @@ antonio@antonio:~$ sudo systemctl reload ssh
    REJECT     all  --  45.240.88.20         anywhere             reject-with icmp-port-unreachable
    RETURN     all  --  anywhere             anywhere
    
+   antonio@antonio:/usr/share/nginx/html$ sudo netfilter-persistent save
+   ```
+
+   ​		Añadimos a Crontab la tarea de agregar las reglas cada vez que se reinicie.
+
+   ```
+   $ sudo crontab -e 
+   @reboot sudo netfilter-persistent reload &
    ```
 
    
@@ -172,6 +181,42 @@ antonio@antonio:~$ sudo systemctl reload ssh
   Initialized empty Git repository in /usr/share/nginx/html/.git/
   ```
 
+- Comprobamos el estado y agregamos los dos ficheros de html
+
+  ```bash
+  antonio@antonio:/usr/share/nginx/html$ sudo git status
+  On branch master
+  
+  No commits yet
+  
+  Untracked files:
+    (use "git add <file>..." to include in what will be committed)
+          README.md
+          index.html
+          
+  antonio@antonio:/usr/share/nginx/html$ sudo git add .
+  
+  antonio@antonio:/usr/share/nginx/html$ git status
+  On branch master
+  
+  No commits yet
+  
+  Changes to be committed:
+    (use "git rm --cached <file>..." to unstage)
+          new file:   README.md
+          new file:   index.html
+  ```
+
+- Realizamos el primer commit.
+
+  ```
+  antonio@antonio:/usr/share/nginx/html$ sudo git commit -m "Initial commit for nginx"
+  [master (root-commit) 44f488b] Initial commit for nginx
+   2 files changed, 244 insertions(+)
+   create mode 100644 README.md
+   create mode 100755 index.html
+  ```
+
 #### 2. Postgresql 
 
 - Instalación del paquete principal y "-contrib", que otorga funcionalidades adicionales
@@ -216,4 +261,129 @@ sudo apt-get install postgresql postgresql-contrib
 ```bash
 sudo apt install graphviz aspell ghostscript clamav php7.4-pspell php7.4-curl php7.4-gd php7.4-intl php7.4-mysql php7.4-xml php7.4-xmlrpc php7.4-ldap php7.4-zip php7.4-soap php7.4-mbstring libmagic-mgc libmagic1 php7.4-cli php7.4-fpm php7.4-json php7.4-opcache php7.4-pgsql php7.4-readline
 ```
+
+#### 4. Moodle
+
+- Instalación
+
+  ```bash
+  cd /usr/share/nginx/html
+  antonio@antonio:/usr/share/nginx/html$ git clone https://github.com/moodle/moodle.git
+  Cloning into 'moodle'...
+  remote: Enumerating objects: 1313584, done.
+  remote: Counting objects: 100% (4/4), done.
+  remote: Compressing objects: 100% (4/4), done.
+  remote: Total 1313584 (delta 0), reused 0 (delta 0), pack-reused 1313580
+  Receiving objects: 100% (1313584/1313584), 612.48 MiB | 18.29 MiB/s, done.
+  Resolving deltas: 100% (928812/928812), done.
+  Updating files: 100% (24276/24276), done.
+  ```
+
+  -  Agregamos la nueva carpeta a git y hacemos el commit.
+
+```bash
+antonio@antonio:/usr/share/nginx/html$ git status
+On branch master
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        moodle/
+
+antonio@antonio:/usr/share/nginx/html$ sudo git add moodle/
+
+antonio@antonio:/usr/share/nginx/html$ sudo git commit -m "Moodle Vanilla version"
+[master fd8569c] Moodle Vanilla version
+ 1 file changed, 1 insertion(+)
+ create mode 160000 moodle
+```
+
+- Ajustes de Moodle
+
+  ```bash
+  vim moodle/config-dist.php
+  
+  $CFG->dbtype    = 'pgsql';      // 'pgsql', 'mariadb', 'mysqli', 'auroramysql', 'sqlsrv' or 'oci'
+  $CFG->dblibrary = 'native';     // 'native' only at the moment
+  $CFG->dbhost    = 'localhost';  // eg 'localhost' or 'db.isp.com' or IP
+  $CFG->dbname    = '*****';     // database name, eg moodle
+  $CFG->dbuser    = '*****';   // your database username
+  $CFG->dbpass    = '*********';   // your database password
+  $CFG->prefix    = 'mdl_';       // prefix to use for all table names
+  $CFG->dboptions = array(
+      'dbpersist' => false,       // should persistent database connections be
+                                  //  used? set to 'false' for the most stable
+                                  //  setting, 'true' can improve performance
+                                  //  sometimes
+      'dbsocket'  => false,       // should connection via UNIX socket be used?
+                                  //  if you set it to 'true' or custom path
+                                  //  here set dbhost to 'localhost',
+                                  //  (please note mysql is always using socket
+                                  //  if dbhost is 'localhost' - if you need
+                                  //  local port connection use '127.0.0.1')
+      'dbport'    => '',          // the TCP port number to use when connecting
+                                  //  to the server. keep empty string for the
+                                  //  default port
+                                  
+  $CFG->wwwroot   = 'http://*******************/moodle';
+  $CFG->dataroot  = '/usr/local/moodledata';
+  ```
+
+- Creamos la estructura que necesitamos de directorios
+
+  ```bash
+  antonio@antonio:/usr/share/nginx/html/moodle$ sudo mkdir /usr/local/moodledata
+  antonio@antonio:/usr/share/nginx/html/moodle$ sudo mkdir /var/cache/moodle
+  antonio@antonio:/usr/share/nginx/html/moodle$ sudo chown www-data:www-data /usr/local/moodledata/
+  antonio@antonio:/usr/share/nginx/html/moodle$ sudo chown www-data:www-data /var/cache/moodle
+  ```
+
+#### 5. Configuración del sitio en Nginx
+
+- Copiamos el archivo por defecto de nginx para modificarlo
+
+```bash
+$ sudo cp /etc/nginx/sites-avaliable/default /etc/nginx/sites-avaliable/moodle
+$ sudo vim /etc/nginx/sites-avaliable/moodle
+server {
+    listen 80;
+    listen [::]:80;
+    root /usr/share/nginx/html/moodle;
+    index  index.php index.html index.htm;
+    server_name  antonio.kunde-ssystems.de www.antonio.kunde-ssystems.de;
+
+    client_max_body_size 100M;
+    autoindex off;
+    location / {
+        try_files $uri $uri/ =404;        
+    }
+ 
+    location /dataroot/ {
+        internal;
+        alias /usr/local/moodledata/;
+    }
+
+    location ~ [^/]\.php(/|$) {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME 
+$document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+}
+```
+
+- Creamos el enlace simbólico a los sitios habilitados
+
+  ```
+  $ sudo ln -s /etc/nginx/sites-available/moodle /etc/nginx/sites-enabled/
+  $ sudo rm /etc/nginx/sites-enabled/default
+  ```
+
+  - Reiniciamos nginx
+
+    ```
+    sudo systemctl restart nginx
+    ```
+
+    
 
