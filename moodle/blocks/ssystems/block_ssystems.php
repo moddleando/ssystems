@@ -12,7 +12,7 @@ class block_ssystems extends block_base {
             return $this->content;
         }
         
-        $this->content         =  new stdClass;
+        $this->content  =  new stdClass;
 
         $google = 'https://www.googleapis.com/customsearch/v1?key='.$API_GOOGLE.'&cx='.$ID_SEARCHENGINE.'&q=Moodle+Blocks';
 
