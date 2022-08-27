@@ -7,6 +7,7 @@ class block_ssystems_google extends block_base {
 
      
     public function get_content() {
+        global $COURSE;
         include 'globalVariable.php'; //
         if ($this->content !== null) {
             return $this->content;
@@ -25,8 +26,11 @@ class block_ssystems_google extends block_base {
         } else{
             $this->content->text = "'Something is wrong in your search:'";
         }
-        
-        $this -> content -> footer = "Footer here...";
+
+        //$this -> content -> footer = "Footer here...";
+
+        $url = new moodle_url('/blocks/ssystems_google/view.php', array('blockid' => $this->instance->id, 'courseid' => $COURSE->id));
+        $this->content->footer = html_writer::link($url, get_string('addpage', 'block_ssystems_google'));
 
         return $this->content;
     }

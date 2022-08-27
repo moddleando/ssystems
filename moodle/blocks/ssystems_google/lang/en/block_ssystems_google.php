@@ -1,5 +1,5 @@
 <?php
 $string['pluginname'] = 'Ssystems Google';
-$string['simplehtml'] = 'Simple HTML';
-$string['simplehtml:addinstance'] = 'Add a new simple HTML block';
-$string['simplehtml:myaddinstance'] = 'Add a new simple HTML block to the My Moodle page';
+$string['ssystems_google'] = 'Ssystems HTML';
+$string['ssystems_google:addinstance'] = 'Add a new Ssystems HTML block';
+$string['ssystems_google:myaddinstance'] = 'Add a new Ssystems HTML block to the My Moodle page';
