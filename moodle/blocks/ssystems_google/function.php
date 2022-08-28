@@ -7,7 +7,6 @@ function googleSearch($sentence){
     if( $search != "")
     {
 		
-	
         $url = 'https://www.googleapis.com/customsearch/v1?key='.$API_GOOGLE.'&cx='.$ID_SEARCHENGINE.'&q='.$search;
 
         // sendRequest

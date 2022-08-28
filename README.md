@@ -425,6 +425,16 @@ $ sudo apt install python3-certbot-nginx
 $ sudo nginx -t && nginx -s reload
 ```
 
+## C. Moodle Blocks
 
+Pfad zu den Dateien:
+
+Aufgabe 4
+
+​	**/moodle/blocks/ssystems**
+
+Aufgabe 5
+
+​	**/moodle/blocks/ssystems_google**
 
 #### 
